@@ -266,6 +266,8 @@ fn run() -> Result<ExitStatus> {
     if let Some(root) = cargo::root()? {
         let host = version_meta.host();
 
+        println!("host is supported : {:?}", host.is_supported(args.target.as_ref()));
+
         if host.is_supported(args.target.as_ref()) {
             let target = args.target
                 .unwrap_or_else(|| Target::from(host.triple(), &target_list));
@@ -285,11 +287,15 @@ fn run() -> Result<ExitStatus> {
             };
             sysroot.set_file_name(&toolchain);
 
+            println!("hoho");
+
             let installed_toolchains = rustup::installed_toolchains(verbose)?;
 
             if !installed_toolchains.into_iter().any(|t| t == toolchain) {
               rustup::install_toolchain(&toolchain, verbose)?;
             }
+
+            println!("installed_toolchains.into_iter");
 
             let available_targets = rustup::available_targets(&toolchain, verbose)?;
             let uses_xargo = if let Some(toml) = toml.as_ref() {
@@ -298,6 +304,8 @@ fn run() -> Result<ExitStatus> {
                 None
             }
             .unwrap_or_else(|| !target.is_builtin() || !available_targets.contains(&target));
+
+            println!("hihi");
 
             if !uses_xargo
                 && !available_targets.is_installed(&target)
@@ -308,12 +316,18 @@ fn run() -> Result<ExitStatus> {
                 rustup::install_component("rust-src", &toolchain, verbose)?;
             }
 
+            println!("toparla");
+
             if args.subcommand.map(|sc| sc == Subcommand::Clippy).unwrap_or(false) &&
                 !rustup::component_is_installed("clippy", &toolchain, verbose)? {
                 rustup::install_component("clippy", &toolchain, verbose)?;
             }
 
+            println!("topla");
+
             let needs_interpreter = args.subcommand.map(|sc| sc.needs_interpreter()).unwrap_or(false);
+
+            println!("topici");
 
             let image_exists = match docker::image(toml.as_ref(), &target) {
                 Ok(_) => true,
@@ -322,7 +336,7 @@ fn run() -> Result<ExitStatus> {
                     false
                 },
             };
-            
+
             let filtered_args = if args.subcommand.map_or(false, |s| !s.needs_target_in_command()) {
                 let mut filtered_args = Vec::new();
                 let mut args_iter = args.all.clone().into_iter();
@@ -339,6 +353,8 @@ fn run() -> Result<ExitStatus> {
             } else {
                 args.all.clone()
             };
+
+            println!("huhu {:?}", target);
 
             if image_exists && target.needs_docker() &&
                args.subcommand.map(|sc| sc.needs_docker()).unwrap_or(false) {
